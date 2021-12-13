@@ -1,0 +1,96 @@
+*cd slcom1
+      parameter (nq=6, ibar2=18, jbar2=18, kbar2=1, ibasc=nq*ibar2
+     1 *jbar2*kbar2)
+c
+c   ****  note: ibar2,jbar2,kbar2 must equal imax,jmax,kmax of mesh
+c               generation when conjugate residual solution method
+c               is used in the pressure iteration
+c
+      parameter (nq2=6, nvec=nq2*ibar2*kbar2)
+c
+c   **** note: twx(nvec) is working array for plot routines
+c                  nvec must equal nq2 times the larger of
+c                  ibar2*jbar2, ibar2*kbar2, jbar2*kbar2
+c
+c      character(200) ititle1(3), ititle2(3)
+      common /slcm1/ basc(ibasc) /slcm2/ basc1(ibasc) /slcm3/ basc2
+     1 (ibasc) /slcm4/ basc3(ibasc) /slcm5/ twx(nvec)
+c
+      common /sscm1/ aa(1), alpha, autot, clk, cyl, cycle, dat, delmn,
+     1 delt, delx(100), delxrl, delxrr, dely(100), delyrbk, delyrf, delz
+     2 (100), delzrb, delzrt, dlz, dmpx, dmpy, dmpz, dtvis, dxmn(10),
+     3 dymn(10), dzmn(10), epsi, fixl(3), fixr, fiyb, fiyt, grdbn(24),
+     4 gx, gy, gz, i, ibar, iclip, igrd, ii0, ii1, ii2, ii3, ii4, ijk,
+     5 ijkm, ijkp, ijmk, ijmkp, ijpk, ijpkm, ijpkp, im1, im2, ii5, ii6,
+     6 ii7, imax, imjk, imjkm, imjkp, imjpk, ipjk, ipjkm, ipjkp, ipjmk,
+     7 ipjpk, imjmk, ijmkm, imjpkp, ipjmkp, ipjpkm, ipjpkp, idefm, isor,
+     8 iter, ititle1(3), ititle2(3), izoom, j, jbar, jm1, jm2, jmax, jnm
+     9 , k, kbar, km1, km2, kmax, lpr, name(8), nc, ncr1, ncr2, nnx, nny
+c
+      common /ssmc2/ nnz, nfcal, nzx, nzy, nzz, ntitle1, ntitle2, nu,
+     1 numtd, nxl(11), nxlbl, nxr(10), nyl(11), nylbl, nyr(10), nzl(11),
+     2 nzlbl, nzr(10), omg, pltdt, prtdt, q(50,50), rdx(100), rdy(100),
+     3 rdz(100), rijk, rx(100), rxi(100), rdxp(100), rdyp(100), rdzp(100
+     4 ), ry(100), ryj(100), rz(100), rzk(100), stim, t, twtd, tddt, td,
+     5 tlimd, tlm, twfin, twplt, twprt, ui, velmx, vi, wb, wbk, wf, wi,
+     6 wl, wr, wt, x(100), xbl, xblc, xbr, xc(10), xconv(3), xi(100), xl
+     7 (11), xlable, y(100), ybbk, ybf, ybfc, yc(10), yconv(3), yj(100),
+     8 yl(11), ylable, z(100), zbb, zbt, zc(10), zcq(50), zk(100), zl(11
+     9 ), zlable, zmn, zmx
+c
+      common /sscm4/ jop(100), jc2pi, sang, csang, icsurf, iequib, sigma
+     1 , cangle, isurft, tanca, sthj(99), iorder, cthj(99), cthjbk(99),
+     2 sthjbk(99), flht, ave, flg, udum, vdum, wdum, emf, emf1, nowall,
+     3 rhof, vchgt, flgc, fnoc, pr(100), nflgc, nocon, voftot, pi, em6
+c
+      common /sscm5/ gxa(nvec), gya(nvec), radps
+c
+      common /sscm5a/ nobs, oa2(10), oa1(10), ob2(10), ob1(10), oc2(10),
+     1 oc1(10), ioh(10), nqbs, qa2(10), qa1(10), qb2(10), qb1(10), qc2(1
+     2 0), qc1(10), iqh(10), qa3(10), qb3(10), qc3(10), qd3(10), qd2(10)
+     3 , qd1(10)
+c
+      common /sscm6/ ic1(10), ic2(10), icvew(10), iperc(10), ipers(10),
+     1 iperv(10), is1(10), is2(10), isvew(10), iv1(10), iv2(10), ivvew(1
+     2 0), jc1(10), jc2(10), js1(10), js2(10), jv1(10), jv2(10), kc1(10)
+     3 , kc2(10), ks1(10), ks2(10), kv1(10), kv2(10), lpmax, nac(10),
+     4 nas(10), nav(10), ncplts, nsplts, nvews, nvplts, rr(100), rri(100
+     5 ), xca(10), xea(10), yca(10), yea(10), zca(10), zea(10), zlast
+c
+c * * note zlast is end of common block dumpped to tape
+c
+      dimension u(1), v(1), w(1), un(1), vn(1), wn(1), beta(1), d(1), p(
+     1 1)
+c
+      equivalence (basc(1),u), (basc(2),v), (basc(3),w), (basc(4),un),
+     1 (basc(5),vn), (basc(6),wn), (basc1(1),beta), (basc1(2),d), (basc1
+     2 (3),p)
+c
+      dimension uvv(1), vvv(1), wvv(1), xpc(1), ypc(1), zpc(1)
+c
+      equivalence (twx(1),uvv), (twx(2),vvv), (twx(3),wvv), (twx(4),xpc)
+     1 , (twx(5),ypc), (twx(6),zpc)
+c
+      dimension f(1), nf(1), ps(1), peta(1), fn(1), ar(1), at(1), abk(1)
+     1 , ac(1), pn(1)
+c
+      equivalence (basc2(1),f), (basc2(2),fn), (basc2(3),peta), (basc2(4
+     1 ),nf), (basc2(5),ps), (basc2(6),pn)
+c
+      equivalence (basc3(1),ar), (basc3(2),at), (basc3(3),abk), (basc3(4
+     1 ),ac)
+c
+      dimension nfp(1), nfs(1), nfo(1)
+c
+      equivalence (basc1(4),nfp), (basc1(5),nfs), (basc1(6),nfo)
+c
+      integer cycle, wl, wr, wt, wb, wf, wbk, td
+      real long, nu
+c
+*cd slcom2
+c * * sscm8 is for perspective graphics
+c
+      common /sscm8/ csphi, csth, etamn, etamx, gdrat, snphi, snth, xcc,
+     1 xeb, ximn, ximx, ycc, yeb, zcc, zeb
+c
+*dk control
